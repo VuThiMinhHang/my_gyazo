@@ -15,6 +15,9 @@ import sys
 BROWSER_CMD = "xdg-open"
 HOST = "gyazo.com"
 CGI = "/upload.cgi"
+UA = "Gyazo/1.0"
+UPLOAD_NAME = "gyazo.com"
+
 # check .my_gyazo.id in your $HOME path for your gyazo's id
 DEFAULT_ID = "fc0ee37405e765231798e3c9111a152f"
 HOME_PATH = os.path.expanduser("~")
@@ -35,7 +38,7 @@ def post_multipart(host, selector, fields, files):
     h.putheader('Content-Type', content_type)
     h.putheader('Host', host)
     h.putheader('Accept', '*/*')
-    h.putheader('User-Agent', 'Gyazo/1.0')
+    h.putheader('User-Agent', UA)
     h.putheader('Content-Length', str(len(body)))
     h.endheaders()
     h.send(body)
@@ -94,7 +97,7 @@ if __name__ == '__main__':
             HOST,
             CGI,
             [('id', current_id)],
-            [('imagedata', 'gyazo.com', data)]
+            [('imagedata', UPLOAD_NAME, data)]
         )
         if headers.has_key('X-Gyazo-Id'):
             new_id = headers['X-Gyazo-Id']
