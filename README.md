@@ -1,8 +1,10 @@
 # my_gyazo
 Alternative simple gyazo script for Ubuntu
+http://gyazo.com
 
 Install
 -------------------
+- Required Python 2.7+ (should come with default install of Ubuntu)
 
 ```bash
   $ sudo ./install.sh
