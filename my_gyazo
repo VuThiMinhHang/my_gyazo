@@ -12,6 +12,15 @@ import time
 import os
 import sys
 
+BROWSER_CMD = "xdg-open"
+HOST = "gyazo.com"
+CGI = "/upload.cgi"
+# check .my_gyazo.id in your $HOME path for your gyazo's id
+DEFAULT_ID = "fc0ee37405e765231798e3c9111a152f"
+HOME_PATH = os.path.expanduser("~")
+ID_FILE = os.path.join(HOME_PATH, '.my_gyazo.id')
+GYAZO_ID_FILE = os.path.join(HOME_PATH, '.gyazo.id')
+
 # http://code.activestate.com/recipes/146306-http-client-to-post-using-multipartform-data/
 def post_multipart(host, selector, fields, files):
     """
@@ -31,7 +40,7 @@ def post_multipart(host, selector, fields, files):
     h.endheaders()
     h.send(body)
     errcode, errmsg, headers = h.getreply()
-    return h.file.read()
+    return h.file.read(), headers
 
 def encode_multipart_formdata(fields, files):
     """
@@ -58,22 +67,43 @@ def encode_multipart_formdata(fields, files):
     content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
     return content_type, body
 
+def read_gyazo_id():
+    try:
+        id_file = GYAZO_ID_FILE if os.path.isfile(GYAZO_ID_FILE) else ID_FILE
+        f = open(id_file, 'r')
+        data = f.read()
+        f.close()
+        return data
+    except Exception, e:
+        return None
+
 if __name__ == '__main__':
     try:
+        current_id = read_gyazo_id()
+        if not current_id:
+            current_id = DEFAULT_ID
+
         temp_name = "%s.png" % hashlib.md5(str(time.time())).hexdigest()
         temp_path = os.path.join(tempfile.gettempdir(), temp_name)
 
         os.system("gnome-screenshot -a -f %s" % temp_path)
         f = open(temp_path, 'rb')
         data = f.read()
-        gyazo_url = post_multipart(
-            'gyazo.com',
-            '/upload.cgi',
-            [('id', '15b7cf85b12f39a6aef93af03cd9f837')],
+        f.close()
+        gyazo_url, headers = post_multipart(
+            HOST,
+            CGI,
+            [('id', current_id)],
             [('imagedata', 'gyazo.com', data)]
         )
+        if headers.has_key('X-Gyazo-Id'):
+            new_id = headers['X-Gyazo-Id']
+            f = open(ID_FILE, 'w')
+            f.write(new_id)
+            f.close()
+
         os.system("rm %s" % temp_path)
-        os.system("xdg-open %s" % gyazo_url)
+        os.system("%s %s" % (BROWSER_CMD, gyazo_url))
         print gyazo_url
     except Exception, e:
         print e
